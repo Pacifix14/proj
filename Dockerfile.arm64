@@ -1,0 +1,81 @@
+##### DEPENDENCIES
+
+ARG platform=linux/arm64
+
+FROM --platform=$platform node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat openssl3 openssl3-dev
+WORKDIR /app
+
+# Install necessary tools, pnpm, and Sharp dependencies
+RUN apk update && \
+  apk add --no-cache python3 make g++ vips-dev && \
+  npm install -g bun
+
+# Copy package files first
+COPY package.json bun.lock ./
+
+# Copy prisma directory
+COPY prisma ./prisma/
+
+COPY public ./public/
+
+# Install dependencies using pnpm
+RUN bun install --frozen-lockfile
+
+##### BUILDER
+
+FROM --platform=$platform node:20-alpine AS builder
+RUN apk add --no-cache tzdata
+ENV TZ=UTC
+WORKDIR /app
+
+# Install build dependencies including Sharp dependencies
+RUN apk add --no-cache python3 make g++ libc6-compat openssl3 openssl3-dev vips-dev && \
+  npm install -g bun
+
+# Copy dependencies and prisma from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/prisma ./prisma
+COPY --from=deps /app/public ./public
+
+# Copy the rest of the application
+COPY . .
+
+# Set build arguments and environment variables
+ARG DATABASE_URL AUTH_SECRET AUTH_URL AUTH_GOOGLE_ID AUTH_GOOGLE_SECRET
+ENV DATABASE_URL=$DATABASE_URL \
+  AUTH_SECRET=$AUTH_SECRET \
+  AUTH_URL=$AUTH_URL \
+  AUTH_GOOGLE_ID=$AUTH_GOOGLE_ID \
+  AUTH_GOOGLE_SECRET=$AUTH_GOOGLE_SECRET
+
+# Generate Prisma Client and run migrations
+RUN bun db:migrate
+
+# Build the application
+ENV NODE_OPTIONS="--max_old_space_size=4096" \
+  NEXT_TELEMETRY_DISABLED=1
+RUN SKIP_ENV_VALIDATION=1 bun run build
+
+# -------------------
+# RUNNER STAGE
+# -------------------
+FROM --platform=$platform node:20-alpine AS runner
+WORKDIR /app
+
+# Set runtime environment variables
+ENV NODE_ENV=production \
+  NEXT_TELEMETRY_DISABLED=1
+
+# Copy necessary files from builder
+COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+
+# Expose port and set the default command
+EXPOSE 3000
+ENV PORT=3000
+CMD ["node", "server.js"]
