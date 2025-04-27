@@ -1,74 +1,621 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+  binaryTargets   = ["native", "linux-arm64-openssl-3.0.x"]
+}
+
+generator json {
+  provider = "prisma-json-types-generator"
 }
 
 datasource db {
-    provider = "postgresql"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
-    url      = env("DATABASE_URL")
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
-
-// Necessary for Next auth
 model Account {
-    id                       String  @id @default(cuid())
-    userId                   String
-    type                     String
-    provider                 String
-    providerAccountId        String
-    refresh_token            String? // @db.Text
-    access_token             String? // @db.Text
-    expires_at               Int?
-    token_type               String?
-    scope                    String?
-    id_token                 String? // @db.Text
-    session_state            String?
-    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    refresh_token_expires_in Int?
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([provider, providerAccountId])
+  @@unique([provider, providerAccountId])
 }
 
 model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
+  identifier String
+  token      String   @unique
+  expires    DateTime
 
-    @@unique([identifier, token])
+  @@unique([identifier, token])
+}
+
+model User {
+  id                String           @id @default(cuid())
+  name              String?
+  email             String           @unique
+  role              UserRole         @default(USER)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  emailVerified     DateTime?
+  image             String?
+  jobTitle          String?
+  phone             String?
+  accounts          Account[]
+  accountants       Accountant[]
+  addresses         Address[]
+  receivedApprovals Approval[]       @relation("ReceivedApprovals")
+  sentApprovals     Approval[]       @relation("SentApprovals")
+  attachments       Attachment[]
+  budgets           Budget[]
+  budgetCategories  BudgetCategory[]
+  budgetVersions    BudgetVersion[]
+  companies         Company[]
+  contactPersons    ContactPerson[]
+  items             Item[]
+  itemCategories    ItemCategory[]
+  projects          Project[]
+  recentBudgets     RecentBudget[]
+  recentCompanies   RecentCompany[]
+  recentProjects    RecentProject[]
+  sessions          Session[]
+  suppliers         Supplier[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model RecentProject {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+}
+
+model RecentCompany {
+  id        String   @id @default(cuid())
+  companyId String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+}
+
+model RecentBudget {
+  id        String   @id @default(cuid())
+  budgetId  String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  budget    Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, budgetId])
+}
+
+model Company {
+  id              String          @id @default(cuid())
+  name            String          @unique
+  lowerCaseName   String          @unique
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  createdById     String
+  quickbooksId    String?
+  website         String
+  active          Boolean         @default(true)
+  address         Address?
+  createdBy       User            @relation(fields: [createdById], references: [id])
+  contactPersons  ContactPerson[]
+  projects        Project[]
+  recentCompanies RecentCompany[]
+
+  @@index([name])
+  @@index([lowerCaseName])
+}
+
+model ContactPerson {
+  id                   String    @id @default(cuid())
+  title                Title
+  firstName            String
+  lastName             String
+  displayName          String
+  lowerCaseDisplayName String
+  email                String
+  lowerCaseEmail       String
+  mobile               String
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  createdById          String
+  companyId            String
+  address              Address?
+  company              Company   @relation(fields: [companyId], references: [id])
+  createdBy            User      @relation(fields: [createdById], references: [id])
+  projects             Project[]
+
+  @@unique([companyId, lowerCaseDisplayName])
+  @@unique([companyId, lowerCaseEmail])
+  @@index([email])
+  @@index([displayName])
+  @@index([companyId])
+}
+
+model SupplierRole {
+  id            String     @id @default(cuid())
+  name          String
+  lowerCaseName String     @unique
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  suppliers     Supplier[]
+}
+
+model PaymentMethod {
+  id            String     @id @default(cuid())
+  name          String
+  lowerCaseName String     @unique
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  suppliers     Supplier[]
+}
+
+model Certification {
+  id        String     @id @default(cuid())
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  suppliers Supplier[]
+}
+
+model Supplier {
+  id                     String         @id @default(cuid())
+  name                   String         @unique
+  lowerCaseName          String         @unique
+  gstRegistered          Boolean        @default(false)
+  email                  String
+  phone                  String
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  createdById            String
+  status                 ApprovalStatus @default(PENDING_APPROVAL)
+  active                 Boolean        @default(true)
+  addressId              String?        @unique
+  bankAccountName        String?
+  bankAccountNumber      String?
+  bankBranchCode         String?
+  bankCode               String?
+  bankName               String?
+  bankSwiftCode          String?
+  certificationId        String?
+  paymentMethodId        String
+  primaryContactPerson   String
+  quickbooksId           String?
+  quickbooksSyncToken    String?
+  roleId                 String
+  secondaryContactPerson String?
+  uenNumber              String?        @unique
+  website                String?
+  paymentTerm            String         @default("30 days terms from invoice")
+  approvals              Approval[]
+  attachments            Attachment[]
+  budgetItems            BudgetItem[]
+  items                  Item[]
+  address                Address?       @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  certification          Certification? @relation(fields: [certificationId], references: [id], onDelete: NoAction)
+  createdBy              User           @relation(fields: [createdById], references: [id])
+  paymentMethod          PaymentMethod  @relation(fields: [paymentMethodId], references: [id], onDelete: NoAction)
+  role                   SupplierRole   @relation(fields: [roleId], references: [id], onDelete: NoAction)
+
+  @@index([name])
+  @@index([lowerCaseName])
+}
+
+model Address {
+  id              String         @id @default(cuid())
+  streetAddress1  String
+  streetAddress2  String?
+  city            String?
+  state           String?
+  postalCode      String?
+  country         String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  createdById     String
+  companyId       String?        @unique
+  contactPersonId String?        @unique
+  company         Company?       @relation(fields: [companyId], references: [id])
+  contactPerson   ContactPerson? @relation(fields: [contactPersonId], references: [id])
+  createdBy       User           @relation(fields: [createdById], references: [id])
+  supplier        Supplier?
+}
+
+model Project {
+  id                       String          @id @default(cuid())
+  name                     String
+  status                   ProjectStatus   @default(NOT_STARTED)
+  description              String?
+  startDate                DateTime
+  endDate                  DateTime
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  createdById              String
+  quickbooksProjectId      String?
+  companyId                String
+  contactPersonId          String
+  requestedForQboProjectId Boolean         @default(false)
+  active                   Boolean         @default(true)
+  budgets                  Budget[]
+  company                  Company         @relation(fields: [companyId], references: [id])
+  contactPerson            ContactPerson   @relation(fields: [contactPersonId], references: [id])
+  createdBy                User            @relation(fields: [createdById], references: [id])
+  recentProjects           RecentProject[]
+}
+
+model BudgetCategory {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  lowerCaseName String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdById   String
+  active        Boolean  @default(true)
+  budgets       Budget[]
+  createdBy     User     @relation(fields: [createdById], references: [id])
+
+  @@index([name])
+  @@index([lowerCaseName])
+}
+
+model ItemCategory {
+  id                  String       @id @default(cuid())
+  name                String       @unique
+  lowerCaseName       String       @unique
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  createdById         String
+  active              Boolean      @default(true)
+  quickbooksId        String?
+  quickbooksSyncToken String?
+  budgetItems         BudgetItem[]
+  items               Item[]
+  createdBy           User         @relation(fields: [createdById], references: [id])
+
+  @@index([name])
+  @@index([lowerCaseName])
+}
+
+model Budget {
+  id                          String            @id @default(cuid())
+  name                        String
+  venue                       String
+  date                        DateTime
+  pax                         Int
+  budget                      Decimal           @db.Decimal(10, 2)
+  status                      BudgetStatus      @default(DRAFT)
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
+  categoryId                  String
+  projectId                   String
+  quickbooksEstimateId        String?
+  quickbooksEstimateSyncToken String?
+  endTime                     DateTime
+  startTime                   DateTime
+  createdById                 String
+  quickbooksDocNumber         String?
+  active                      Boolean           @default(true)
+  paymentTerm                 String            @default("This event quotation is subject to our standard terms and conditions. A copy of which is attached herewith. Our standard payment terms are 70% deposit upon confirmation, and balance payment 6 weeks prior to your event date. For events $5,000 and below, full payment is due upon confirmation.")
+  approvals                   Approval[]
+  attachments                 Attachment[]
+  budgetCategory              BudgetCategory    @relation(fields: [categoryId], references: [id])
+  createdBy                   User              @relation(fields: [createdById], references: [id])
+  project                     Project           @relation(fields: [projectId], references: [id])
+  commission                  BudgetCommission?
+  discount                    BudgetDiscount?
+  budgetItems                 BudgetItem[]
+  versions                    BudgetVersion[]
+  recentBudgets               RecentBudget[]
+
+  @@index([createdById])
+  @@index([status])
+  @@index([categoryId])
+}
+
+model Attachment {
+  id          String         @id @default(cuid())
+  name        String?
+  key         String         @unique
+  itemId      String?
+  budgetId    String?
+  createdById String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  type        AttachmentType @default(BUDGET)
+  size        Int
+  active      Boolean        @default(true)
+  supplierId  String?
+  budget      Budget?        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  createdBy   User           @relation(fields: [createdById], references: [id])
+  item        Item?          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  supplier    Supplier?      @relation(fields: [supplierId], references: [id])
+
+  @@index([key])
+  @@index([itemId])
+  @@index([budgetId])
+  @@index([type])
+  @@index([supplierId])
+}
+
+model Item {
+  id                  String       @id
+  name                String
+  lowerCaseName       String
+  quickbooksId        String
+  description         String?
+  cost                Decimal      @db.Decimal(10, 2)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  supplierId          String
+  categoryId          String
+  createdById         String
+  quickbooksSyncToken String?
+  active              Boolean      @default(true)
+  gstInclusive        Boolean      @default(false)
+  attachments         Attachment[]
+  budgetItems         BudgetItem[]
+  itemCategory        ItemCategory @relation(fields: [categoryId], references: [id])
+  createdBy           User         @relation(fields: [createdById], references: [id])
+  supplier            Supplier     @relation(fields: [supplierId], references: [id])
+
+  @@index([createdById])
+  @@index([supplierId])
+  @@index([categoryId])
+  @@index([lowerCaseName])
+}
+
+model BudgetItem {
+  id             String       @id @default(cuid())
+  quantity       Int          @default(1)
+  isFreeOfCharge Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  itemId         String
+  budgetId       String
+  unitPrice      Decimal      @db.Decimal(10, 2)
+  categoryId     String
+  cost           Decimal      @db.Decimal(10, 2)
+  description    String?
+  lowerCaseName  String
+  name           String
+  supplierId     String
+  gstInclusive   Boolean      @default(false)
+  markup         Decimal      @default(30) @db.Decimal(15, 6)
+  budget         Budget       @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  itemCategory   ItemCategory @relation(fields: [categoryId], references: [id])
+  item           Item         @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  supplier       Supplier     @relation(fields: [supplierId], references: [id])
+
+  @@unique([budgetId, lowerCaseName, itemId])
+  @@index([budgetId])
+  @@index([lowerCaseName])
+}
+
+model VersionGroup {
+  id        String          @id @default(cuid())
+  name      String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  versions  BudgetVersion[]
+}
+
+model BudgetVersion {
+  id             String        @id @default(cuid())
+  changeType     ChangeType
+  /// [BudgetVersionSnapshot]
+  snapshot       Json
+  createdAt      DateTime      @default(now())
+  versionGroupId String?
+  budgetId       String
+  createdById    String
+  budget         Budget        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  createdBy      User          @relation(fields: [createdById], references: [id])
+  versionGroup   VersionGroup? @relation(fields: [versionGroupId], references: [id], onDelete: Cascade)
+
+  @@index([budgetId])
+  @@index([createdById])
+  @@index([versionGroupId])
+}
+
+model BudgetDiscount {
+  id              String   @id @default(cuid())
+  name            String
+  amount          Decimal? @db.Decimal(10, 2)
+  budgetId        String   @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  percentage      Float?
+  percentageBased Boolean  @default(false)
+  budget          Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+}
+
+model BudgetCommission {
+  id         String   @id @default(cuid())
+  name       String
+  amount     Decimal  @db.Decimal(10, 2)
+  percentage Float
+  budgetId   String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  budget     Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+}
+
+model Approval {
+  id              String         @id @default(cuid())
+  status          ApprovalStatus @default(PENDING_APPROVAL)
+  budgetId        String?
+  requesterId     String
+  approverId      String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  approverRead    Boolean        @default(false)
+  requesterRead   Boolean        @default(false)
+  rejectionReason String?
+  supplierId      String?
+  type            ApprovalType
+  approver        User           @relation("ReceivedApprovals", fields: [approverId], references: [id])
+  budget          Budget?        @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  requester       User           @relation("SentApprovals", fields: [requesterId], references: [id])
+  supplier        Supplier?      @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([requesterId])
+  @@index([approverId])
+  @@index([budgetId])
+  @@index([supplierId])
+}
+
+model Accountant {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+}
+
+model OAuthToken {
+  id                    String   @id @default(cuid())
+  provider              String
+  realmId               String
+  accessToken           String
+  refreshToken          String
+  tokenType             String
+  expiresIn             Int
+  refreshTokenExpiresIn Int
+  createdAt             DateTime @default(now())
+
+  @@index([provider, realmId])
+  @@index([createdAt])
+}
+
+model AllowedDomain {
+  id        String   @id @default(cuid())
+  domain    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AllowedEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum AttachmentType {
+  GLOBAL_ATTACHMENT
+  BUDGET
+  ITEM
+  SUPPLIER
+}
+
+enum ProjectStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum BudgetStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  ESTIMATE_SENT
+  ESTIMATE_ACCEPTED
+  ESTIMATE_REJECTED
+  ESTIMATE_CLOSED
+  COMPLETED
+  ESTIMATE_CREATED
+}
+
+enum ApprovalStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalType {
+  BUDGET
+  SUPPLIER
+}
+
+enum UserRole {
+  USER
+  LEAD
+  ADMIN
+}
+
+enum Title {
+  MR
+  MRS
+  MS
+  DR
+}
+
+enum ChangeType {
+  BUDGET_CREATED
+  BUDGET_DELETED
+  DETAILS_UPDATED
+  MARKUP_UPDATED
+  FOC_UPDATED
+  QUANTITY_UPDATED
+  ITEM_REMOVED
+  ITEM_ADDED
+  VERSION_RESTORED
+  DISCOUNT_ADDED
+  DISCOUNT_UPDATED
+  DISCOUNT_REMOVED
+  ATTACHMENT_ADDED
+  ATTACHMENTS_UPDATED
+  ATTACHMENT_REMOVED
+  CONTACT_PERSON_UPDATED
+  COMMISSION_ADDED
+  COMMISSION_UPDATED
+  COMMISSION_REMOVED
+  DESCRIPTION_UPDATED
+  COST_UPDATED
+  UNIT_PRICE_UPDATED
+  GST_INCLUSIVE_UPDATED
 }
