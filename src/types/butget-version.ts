@@ -12,7 +12,6 @@ import type {
 } from "@prisma/client";
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace PrismaJson {
     type BudgetVersionSnapshot = Budget & {
       createdBy: User;

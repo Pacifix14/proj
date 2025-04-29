@@ -9,9 +9,7 @@ import {
 } from "lucide-react";
 
 // import { useFetchBudgetAndSendAI } from "@/utils/use-fetch-budget-and-send-ai";
-
-
-import { type RouterOutputs } from "@/trpc/react";
+import type { RouterOutputs } from "@/trpc/react";
 
 import truncateText from "@/lib/truncate-text";
 
