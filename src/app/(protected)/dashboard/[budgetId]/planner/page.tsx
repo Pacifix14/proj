@@ -77,11 +77,11 @@ const BudgetPage = () => {
 					<div>Loading tasks...</div>
 				) : (
 					sections.map((section) => (
-						<Card key={section}>
-							<CardHeader>
+						<Card key={section} className="gap-2">
+							<CardHeader className="gap-0 px-2">
 								<Button
 									variant="ghost"
-									className="w-full justify-between text-left"
+									className="h-full w-full justify-between text-left "
 									onClick={() => toggleSection(section)}
 								>
 									<div>

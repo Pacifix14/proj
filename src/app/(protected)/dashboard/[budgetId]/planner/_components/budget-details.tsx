@@ -50,13 +50,13 @@ const BudgetDetails = ({ budget }: BudgetDetailsProps) => {
 
 	return (
 		<Card className="transition-shadow hover:shadow-lg">
-			<CardHeader className="flex flex-row items-center justify-between px-10">
+			<CardHeader className="flex flex-row items-center justify-between">
 				<CardTitle className="flex items-center gap-2">
 					<TooltipProvider>
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<div className="flex items-center gap-2">
-									<Building className="h-4 w-4" />
+									<Building className="h-4" />
 									<span>{truncateText(budget.name, 20)}</span>
 								</div>
 							</TooltipTrigger>
@@ -68,17 +68,17 @@ const BudgetDetails = ({ budget }: BudgetDetailsProps) => {
 				</CardTitle>
 			</CardHeader>
 
-			<CardContent className="space-y-3 px-10">
+			<CardContent className="space-y-3">
 				<div className="flex items-center space-x-2 text-sm">
-					<FolderTree className="h-4 w-4" />
+					<FolderTree className="h-4" />
 					<span>{truncateText(budget.venue, 20)}</span>
 				</div>
 				<div className="flex items-center space-x-2 text-sm">
-					<Users className="h-4 w-4" />
+					<Users className="h-4" />
 					<span>{budget.pax} Pax</span>
 				</div>
 				<div className="flex items-center space-x-2 text-sm">
-					<CalendarSync className="h-4 w-4" />
+					<CalendarSync className="h-4 " />
 					<span>{formatDate(budget.date)}</span>
 				</div>
 				<div className="flex items-center space-x-2 text-sm">
@@ -86,9 +86,9 @@ const BudgetDetails = ({ budget }: BudgetDetailsProps) => {
 				</div>
 			</CardContent>
 
-			<CardFooter className="flex items-center justify-between px-10 text-muted-foreground text-sm">
+			<CardFooter className="flex items-center justify-between text-muted-foreground text-sm">
 				<div className="flex items-center gap-2">
-					<CalendarPlus className="h-4 w-4" />
+					<CalendarPlus className="h-4" />
 					<span>Created: {formatDate(new Date(budget.createdAt))}</span>
 				</div>
 				<p>by {budget.createdBy.name}</p>

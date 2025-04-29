@@ -24,7 +24,7 @@ const Dropdown = ({ label, options, onChange }: DropdownProps) => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="outline" className="w-full">
+				<Button variant="outline" className="w-full px-0">
 					{selectedTask ?? `Select ${label}`}
 				</Button>
 			</DropdownMenuTrigger>
