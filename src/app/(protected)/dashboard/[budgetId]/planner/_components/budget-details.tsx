@@ -50,7 +50,7 @@ const BudgetDetails = ({ budget }: BudgetDetailsProps) => {
 
 	return (
 		<Card className="transition-shadow hover:shadow-lg">
-			<CardHeader className="flex flex-row items-center justify-between">
+			<CardHeader className="flex flex-row items-center justify-between px-10">
 				<CardTitle className="flex items-center gap-2">
 					<TooltipProvider>
 						<Tooltip>
@@ -68,7 +68,7 @@ const BudgetDetails = ({ budget }: BudgetDetailsProps) => {
 				</CardTitle>
 			</CardHeader>
 
-			<CardContent className="space-y-3">
+			<CardContent className="space-y-3 px-10">
 				<div className="flex items-center space-x-2 text-sm">
 					<FolderTree className="h-4 w-4" />
 					<span>{truncateText(budget.venue, 20)}</span>
@@ -86,7 +86,7 @@ const BudgetDetails = ({ budget }: BudgetDetailsProps) => {
 				</div>
 			</CardContent>
 
-			<CardFooter className="flex items-center justify-between text-muted-foreground text-sm">
+			<CardFooter className="flex items-center justify-between px-10 text-muted-foreground text-sm">
 				<div className="flex items-center gap-2">
 					<CalendarPlus className="h-4 w-4" />
 					<span>Created: {formatDate(new Date(budget.createdAt))}</span>

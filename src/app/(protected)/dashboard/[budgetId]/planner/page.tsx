@@ -2,10 +2,17 @@
 
 import BudgetDetails from "@/app/(protected)/dashboard/[budgetId]/planner/_components/budget-details";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getAIGeneratedTasks } from "@/constants/ai-generated-tasks";
 import { api } from "@/trpc/react";
 import { useParams } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const sections = [
 	"Event Details",
@@ -27,7 +34,6 @@ const BudgetPage = () => {
 	const [openSection, setOpenSection] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
-	// Use useQuery hook to fetch the budget data
 	const budgetQuery = api.budget.getBudgetById.useQuery(
 		{ id: budgetId },
 		{ enabled: !!budgetId },
@@ -71,35 +77,57 @@ const BudgetPage = () => {
 					<div>Loading tasks...</div>
 				) : (
 					sections.map((section) => (
-						<div key={section} className="overflow-hidden rounded-lg border">
-							{/* Header */}
-							<Button
-								className="flex w-full items-center justify-between p-4 hover:bg-gray-700 focus:outline-none"
-								onClick={() => toggleSection(section)}
-							>
-								<div>
-									<h2 className="font-semibold text-lg">{section}</h2>
-									<p className="text-gray-400 text-sm">Click to view tasks</p>
-								</div>
-								<div className="text-gray-400">
-									{openSection === section ? "▲" : "▼"}
-								</div>
-							</Button>
+						<Card key={section}>
+							<CardHeader>
+								<Button
+									variant="ghost"
+									className="w-full justify-between text-left"
+									onClick={() => toggleSection(section)}
+								>
+									<div>
+										<h2 className="font-semibold text-lg">{section}</h2>
+										<p className="text-muted-foreground text-sm">
+											Click to view tasks
+										</p>
+									</div>
+									<span className="text-muted-foreground">
+										{openSection === section ? "▲" : "▼"}
+									</span>
+								</Button>
+							</CardHeader>
 
-							{/* Tasks */}
 							{openSection === section && (
-								<div className="space-y-2 p-4 ">
-									{(tasks[section] ?? []).map((task, index) => (
+								<CardContent className="space-y-3">
+									{(tasks[section] ?? []).map((task) => (
 										<div
 											key={task}
-											className="border-gray-600 border-b pb-2 text-gray-300 text-sm"
+											className="flex items-center justify-between border-b pb-2 text-gray-700 text-sm dark:text-gray-300"
 										>
-											{task}
+											<span>{task}</span>
+											<DropdownMenu>
+												<DropdownMenuTrigger asChild>
+													<Button variant="ghost" size="sm">
+														⋯
+													</Button>
+												</DropdownMenuTrigger>
+												<DropdownMenuContent align="end">
+													<DropdownMenuItem
+														onSelect={() => alert(`Edit "${task}"`)}
+													>
+														Edit
+													</DropdownMenuItem>
+													<DropdownMenuItem
+														onSelect={() => alert(`Mark "${task}" done`)}
+													>
+														Mark as Done
+													</DropdownMenuItem>
+												</DropdownMenuContent>
+											</DropdownMenu>
 										</div>
 									))}
-								</div>
+								</CardContent>
 							)}
-						</div>
+						</Card>
 					))
 				)}
 			</div>
