@@ -9,11 +9,6 @@ variable "REMOTE_STATE_BUCKET" {
   type        = string
 }
 
-# variable "AWS_S3_BUCKET_NAME" {
-#   description = "The name of the S3 bucket to store the application file."
-#   type        = string
-# }
-
 variable "AWS_REGION" {
   description = "The AWS region to deploy resources in."
   type        = string
