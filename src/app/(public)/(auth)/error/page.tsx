@@ -1,8 +1,8 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { AlertCircle, ArrowLeft, ShieldAlert } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 enum AuthError {
 	Configuration = "Configuration",
@@ -45,7 +45,7 @@ const errorMap = {
 				verification link.
 				<button
 					type="button"
-					className="mt-4 block w-full rounded-lg bg-blue-500 px-4 py-2 text-center text-sm font-medium text-white hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 focus:outline-none"
+					className="mt-4 block w-full rounded-lg bg-blue-500 px-4 py-2 text-center font-medium text-sm text-white hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-300"
 				>
 					Resend Verification Email
 				</button>
@@ -77,7 +77,7 @@ const AuthErrorPage = () => {
 						<div className="rounded-xl bg-white p-8 shadow-2xl ring-1 ring-gray-200/50">
 							<div className="flex flex-col items-center">
 								{errorContent.icon}
-								<h1 className="mt-4 text-2xl font-bold tracking-tight text-gray-900">
+								<h1 className="mt-4 font-bold text-2xl text-gray-900 tracking-tight">
 									{errorContent.title}
 								</h1>
 								<div className="mt-4 max-w-lg">{errorContent.message}</div>
@@ -85,14 +85,14 @@ const AuthErrorPage = () => {
 								<div className="mt-8 flex items-center justify-center space-x-4">
 									<Link
 										href="/"
-										className="inline-flex items-center space-x-2 text-sm font-medium text-gray-500 hover:text-gray-700"
+										className="inline-flex items-center space-x-2 font-medium text-gray-500 text-sm hover:text-gray-700"
 									>
 										<ArrowLeft className="h-4 w-4" />
 										<span>Back to Login</span>
 									</Link>
 									<Link
 										href="/help-center"
-										className="text-sm font-medium text-blue-600 hover:text-blue-500"
+										className="font-medium text-blue-600 text-sm hover:text-blue-500"
 									>
 										Help Center
 									</Link>

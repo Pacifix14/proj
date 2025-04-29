@@ -1,21 +1,21 @@
 "use client";
 
-import React, { Fragment } from "react";
 import { useParams, usePathname } from "next/navigation";
+import React, { Fragment } from "react";
 
-import { api } from "@/trpc/react";
 import truncateText from "@/lib/truncate-text";
+import { api } from "@/trpc/react";
 
 import {
 	Breadcrumb,
 	BreadcrumbItem,
-	BreadcrumbList,
 	BreadcrumbLink,
+	BreadcrumbList,
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Skeleton } from "@/components/ui/skeleton";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import ModeToggle from "@/app/_components/mode-toggle-button";
 
@@ -24,7 +24,7 @@ const Nav = () => {
 	const params = useParams();
 	const paths = pathname.split("/").filter(Boolean);
 
-	const { data: budget } = api.v1.budget.getBudgetInfoForNav.useQuery(
+	const { data: budget } = api.budget.getBudgetInfoForNav.useQuery(
 		{
 			id: params.budgetId as string,
 		},

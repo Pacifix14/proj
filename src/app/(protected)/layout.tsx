@@ -4,39 +4,37 @@ import { redirect } from "next/navigation";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import NextAuthThemeProvider from "@/app/(protected)/providers/next-auth-provider";
-import Nav from "@/app/_components/nav";
 import AppSidebar from "@/app/_components/app-sidebar";
-import { api } from "@/trpc/server";
+import Nav from "@/app/_components/nav";
 
 export default async function ProtectedLayout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  const session = await auth();
+	const session = await auth();
 
-  if (!session) {
-    return redirect("/");
-  }
+	if (!session) {
+		return redirect("/");
+	}
 
-  return (
-    <NextAuthThemeProvider
-      session={session}
-      attribute="class"
-      defaultTheme="light"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <SidebarProvider>
-        <AppSidebar
-        />
-        <SidebarInset className="contain-inline-size">
-          <Nav />
-          <div className="mx-auto flex w-full flex-1 flex-col p-6">
-            {children}
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
-    </NextAuthThemeProvider>
-  );
+	return (
+		<NextAuthThemeProvider
+			session={session}
+			attribute="class"
+			defaultTheme="light"
+			enableSystem
+			disableTransitionOnChange
+		>
+			<SidebarProvider>
+				<AppSidebar />
+				<SidebarInset className="contain-inline-size">
+					<Nav />
+					<div className="mx-auto flex w-full flex-1 flex-col p-6">
+						{children}
+					</div>
+				</SidebarInset>
+			</SidebarProvider>
+		</NextAuthThemeProvider>
+	);
 }
