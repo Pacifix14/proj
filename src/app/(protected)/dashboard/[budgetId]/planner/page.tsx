@@ -1,6 +1,7 @@
 "use client";
 
 import BudgetDetails from "@/app/(protected)/dashboard/[budgetId]/planner/_components/budget-details";
+import Dropdown from "@/app/(protected)/dashboard/[budgetId]/planner/_components/dropdown"; // Import your Dropdown component
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -9,7 +10,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getAIGeneratedTasks } from "@/constants/ai-generated-tasks";
+import { parseAssistantReply } from "@/server/utils/parsed-assistant-reply";
 import { api } from "@/trpc/react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -38,23 +39,39 @@ const BudgetPage = () => {
 		{ id: budgetId },
 		{ enabled: !!budgetId },
 	);
+	const sendToAssistantMutation = api.assistant.sendToAssistant.useMutation();
 
 	useEffect(() => {
-		if (budgetId) {
+		if (budgetId && budgetQuery.data) {
+			setIsLoading(true);
+
+			sendToAssistantMutation.mutateAsync({ budgetData: budgetQuery.data });
+			console.log();
 			const fetchTasks = async () => {
-				setIsLoading(true);
-				const tasksData: Record<string, string[]> = {};
-				for (const section of sections) {
-					const sectionTasks = await getAIGeneratedTasks(section);
-					tasksData[section] = sectionTasks;
+				try {
+					const assistantData = await sendToAssistantMutation.mutateAsync({
+						budgetData: budgetQuery.data,
+					});
+
+					const replyText =
+						assistantData.reply?.[0]?.type === "text"
+							? assistantData.reply[0].text.value
+							: "";
+					console.log("🧠 Assistant raw reply text:\n", replyText);
+
+					const parsedTasks = parseAssistantReply(replyText);
+					console.log(parsedTasks);
+					setTasks(parsedTasks);
+				} catch (err) {
+					console.error("Error while fetching tasks:", err);
+				} finally {
+					setIsLoading(false);
 				}
-				setTasks(tasksData);
-				setIsLoading(false);
 			};
 
 			void fetchTasks();
 		}
-	}, [budgetId]);
+	}, [budgetId, budgetQuery.data, sendToAssistantMutation.mutateAsync]);
 
 	const toggleSection = (section: string) => {
 		setOpenSection((prev) => (prev === section ? null : section));
@@ -81,7 +98,7 @@ const BudgetPage = () => {
 							<CardHeader className="gap-0 px-2">
 								<Button
 									variant="ghost"
-									className="h-full w-full justify-between text-left "
+									className="h-full w-full justify-between text-left"
 									onClick={() => toggleSection(section)}
 								>
 									<div>
@@ -98,31 +115,16 @@ const BudgetPage = () => {
 
 							{openSection === section && (
 								<CardContent className="space-y-3">
-									{(tasks[section] ?? []).map((task) => (
+									{tasks[section]?.map((task) => (
 										<div
 											key={task}
 											className="flex items-center justify-between border-b pb-2 text-gray-700 text-sm dark:text-gray-300"
 										>
-											<span>{task}</span>
-											<DropdownMenu>
-												<DropdownMenuTrigger asChild>
-													<Button variant="ghost" size="sm">
-														⋯
-													</Button>
-												</DropdownMenuTrigger>
-												<DropdownMenuContent align="end">
-													<DropdownMenuItem
-														onSelect={() => alert(`Edit "${task}"`)}
-													>
-														Edit
-													</DropdownMenuItem>
-													<DropdownMenuItem
-														onSelect={() => alert(`Mark "${task}" done`)}
-													>
-														Mark as Done
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
+											<Dropdown
+												label={task}
+												options={tasks[section] ?? []}
+												onChange={(value) => alert(`Task selected: ${value}`)}
+											/>
 										</div>
 									))}
 								</CardContent>

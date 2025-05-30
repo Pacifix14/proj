@@ -28,25 +28,14 @@ type BudgetDetailsProps = {
 	budget: RouterOutputs["budget"]["getBudgetById"];
 };
 
+
 const BudgetDetails = ({ budget }: BudgetDetailsProps) => {
 	if (!budget) {
 		return <div>Budget not found.</div>;
 	}
-
 	// For debugging
 	console.log("Budget object:", budget);
 	console.log("Budget.budget type:", typeof budget.budget);
-
-	// Format budget value safely with specific types
-	const formatBudgetValue = (value: number | string): string => {
-		if (typeof value === "number") {
-			return `$${value.toFixed(2)}`;
-		}
-		if (typeof value === "string" && !Number.isNaN(Number.parseFloat(value))) {
-			return `$${Number.parseFloat(value).toFixed(2)}`;
-		}
-		return `${String(value)}`;
-	};
 
 	return (
 		<Card className="transition-shadow hover:shadow-lg">
